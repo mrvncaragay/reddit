@@ -13,7 +13,7 @@ const config = {
   type: 'postgresql',
   user: 'root',
   password: 'Password',
-  debug: !__prod__
+  debug: !__prod__,
 } as Parameters<typeof MikroORM.init>[0];
 
 export default config;

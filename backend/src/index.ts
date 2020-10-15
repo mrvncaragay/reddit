@@ -1,11 +1,9 @@
 import express from 'express';
-import { ApolloServer } from 'apollo-server-express'
+import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import { MikroORM } from '@mikro-orm/core';
-//import { Post } from './entities/Post'
 import mikroConfig from './mikro-orm.config';
 import { PostResolver } from './resolvers/post';
-
 
 const main = async () => {
   const orm = await MikroORM.init(mikroConfig);
@@ -16,19 +14,19 @@ const main = async () => {
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [PostResolver],
-      validate: false
+      validate: false,
     }),
 
-    context: () => ({ em: orm.em }) // allows to expose the object to the resolvers
+    context: () => ({ em: orm.em }), // allows to expose the object to the resolvers
   });
 
-  apolloServer.applyMiddleware({ app })
+  apolloServer.applyMiddleware({ app });
 
-  app.listen(8000,() => {
-    console.log('server started on localhost:8000...')
+  app.listen(8000, () => {
+    console.log('server started on localhost:8000...');
   });
-}
+};
 
 main().catch((err) => {
-  console.error(err)
+  console.error(err);
 });
