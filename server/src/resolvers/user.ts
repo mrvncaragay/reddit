@@ -64,9 +64,9 @@ export class UserResolver {
       };
     }
 
-    if (options.password.length <= 5) {
+    if (options.password.length <= 2) {
       return {
-        errors: [{ field: 'password', message: 'Password length must be greater than 5.' }],
+        errors: [{ field: 'password', message: 'Password length must be greater than 2.' }],
       };
     }
 

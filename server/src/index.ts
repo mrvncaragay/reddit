@@ -9,6 +9,7 @@ import mikroConfig from './mikro-orm.config';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { __prod__ } from './constants';
+import cors from 'cors';
 
 const main = async () => {
   const orm = await MikroORM.init(mikroConfig);
@@ -18,6 +19,14 @@ const main = async () => {
 
   const RedisStore = connectRedis(session);
   const redisClient = redis.createClient();
+
+  // Run it to all routes
+  app.use(
+    cors({
+      origin: 'http://localhost:3000',
+      credentials: true,
+    }),
+  );
 
   app.use(
     session({
@@ -44,7 +53,7 @@ const main = async () => {
     context: ({ req, res }) => ({ em: orm.em, req, res }), // allows to expose the object to the resolvers
   });
 
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({ app, cors: false });
 
   app.listen(8000, () => {
     console.log('server started on localhost:8000...');
