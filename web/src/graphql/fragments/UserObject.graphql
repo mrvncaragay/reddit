@@ -1,0 +1,4 @@
+fragment UserObject on User {
+  id
+  username
+}
