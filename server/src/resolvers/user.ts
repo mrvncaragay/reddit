@@ -2,6 +2,7 @@ import { User } from '../entities/User';
 import { MyContext } from 'src/types';
 import { Resolver, Ctx, Arg, Mutation, InputType, Field, Query, ObjectType } from 'type-graphql';
 import argon2 from 'argon2';
+import { COOKIE_NAME } from '../constants';
 
 @InputType()
 class UserInfo {
@@ -108,5 +109,22 @@ export class UserResolver {
     return {
       user,
     };
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: MyContext): Promise<boolean> {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+
+        // remove both cookie and session in Redis
+        res.clearCookie(COOKIE_NAME);
+        resolve(true);
+      }),
+    );
   }
 }
