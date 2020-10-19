@@ -1,17 +1,10 @@
 import { User } from '../entities/User';
 import { MyContext } from 'src/types';
-import { Resolver, Ctx, Arg, Mutation, InputType, Field, Query, ObjectType } from 'type-graphql';
+import { Resolver, Ctx, Arg, Mutation, Field, Query, ObjectType } from 'type-graphql';
 import argon2 from 'argon2';
 import { COOKIE_NAME } from '../constants';
-
-@InputType()
-class UserInfo {
-  @Field()
-  username: string;
-
-  @Field()
-  password: string;
-}
+import { UserInfo } from './UserInfo';
+import { validateRegister } from '../utils/validateRegister';
 
 @ObjectType()
 class FieldError {
@@ -50,30 +43,32 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async register(@Arg('options') options: UserInfo, @Ctx() { em, req }: MyContext): Promise<UserResponse> {
-    const validUser = await em.findOne(User, { username: options.username });
+  async register(
+    @Arg('options') options: UserInfo,
+    @Ctx() { em, req }: MyContext,
+  ): Promise<UserResponse> {
+    // handle email or username exists
+    // const validUser = await em.findOne(User, {
+    //   username: options.username,
+    //   email: options.email,
+    // });
 
-    if (validUser) {
-      return {
-        errors: [{ field: 'username', message: 'That username is taken.' }],
-      };
-    }
+    // if (validUser) {
+    //   return {
+    //     errors: [{ field: 'username', message: 'That username is taken.' }],
+    //   };
+    // }
 
-    if (options.username.length <= 2) {
-      return {
-        errors: [{ field: 'username', message: 'Username length must be greater than 2.' }],
-      };
-    }
+    const errors = validateRegister(options);
 
-    if (options.password.length <= 2) {
-      return {
-        errors: [{ field: 'password', message: 'Password length must be greater than 2.' }],
-      };
+    if (errors) {
+      return { errors };
     }
 
     const hashedPassword = await argon2.hash(options.password);
     const user = em.create(User, {
       username: options.username,
+      email: options.email,
       password: hashedPassword,
     });
     await em.persistAndFlush(user);
@@ -86,16 +81,24 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async login(@Arg('options') options: UserInfo, @Ctx() { em, req }: MyContext): Promise<UserResponse> {
-    const user = await em.findOne(User, { username: options.username });
+  async login(
+    @Arg('usernameOrEmail') usernameOrEmail: string,
+    @Arg('password') password: string,
+    @Ctx() { em, req }: MyContext,
+  ): Promise<UserResponse> {
+    console.log('dsadsa', usernameOrEmail, password);
+    const user = await em.findOne(
+      User,
+      usernameOrEmail.includes('@') ? { email: usernameOrEmail } : { username: usernameOrEmail },
+    );
 
     if (!user) {
       return {
-        errors: [{ field: 'username', message: 'That username does not exist.' }],
+        errors: [{ field: 'usernameOrEmail', message: 'That username or email does not exist.' }],
       };
     }
 
-    const valid = await argon2.verify(user.password, options.password);
+    const valid = await argon2.verify(user.password, password);
 
     if (!valid) {
       return {
