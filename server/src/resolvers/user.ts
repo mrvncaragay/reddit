@@ -2,9 +2,11 @@ import { User } from '../entities/User';
 import { MyContext } from 'src/types';
 import { Resolver, Ctx, Arg, Mutation, Field, Query, ObjectType } from 'type-graphql';
 import argon2 from 'argon2';
-import { COOKIE_NAME } from '../constants';
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants';
 import { UserInfo } from './UserInfo';
 import { validateRegister } from '../utils/validateRegister';
+import { sendEmail } from '../utils/sendEmail';
+import { v4 } from 'uuid';
 
 @ObjectType()
 class FieldError {
@@ -26,6 +28,26 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => Boolean)
+  async forgotPassword(
+    @Arg('email') email: string,
+    @Ctx() { em, redis }: MyContext,
+  ): Promise<boolean> {
+    const user = await em.findOne(User, { email });
+
+    // Email not in DB do nothing
+    if (!user) {
+      return true;
+    }
+
+    const token = v4();
+    await redis.set(FORGET_PASSWORD_PREFIX + token, user.id, 'ex', 1000 * 60 * 30); // 30mins
+    const link = `<a href="http://localhost:3000/change-password/${token}">reset password</a>`;
+    await sendEmail(email, link);
+
+    return true;
+  }
+
   @Query(() => User, { nullable: true })
   async me(@Ctx() { req, em }: MyContext): Promise<User | null> {
     // User not log in
