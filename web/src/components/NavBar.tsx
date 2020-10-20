@@ -41,7 +41,7 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
   }
 
   return (
-    <Flex bg="tomato" padding={4} ml={'auto'}>
+    <Flex position="sticky" top={0} zIndex={1} bg="tomato" padding={4} ml={'auto'}>
       <Box ml={'auto'}>{registerLoginLink}</Box>
     </Flex>
   );
