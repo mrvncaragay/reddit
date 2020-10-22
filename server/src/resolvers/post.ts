@@ -114,10 +114,10 @@ export class PostResolver {
       replacements.push(req.session.userId);
     }
 
-    let cursorIndex = '3';
+    let cursorIndex = 3;
     if (cursor) {
       replacements.push(new Date(cursor));
-      cursorIndex = '' + replacements.length;
+      cursorIndex = replacements.length;
     }
 
     const posts = await getConnection().query(
@@ -190,8 +190,9 @@ limit $1
   }
 
   @Mutation(() => Boolean)
-  async deletePost(@Arg('id') id: number): Promise<boolean> {
-    await Post.delete(id);
+  @UseMiddleware(isAuth)
+  async deletePost(@Arg('id', () => Int) id: number, @Ctx() { req }: MyContext): Promise<boolean> {
+    await Post.delete({ id, creatorId: req.session.userId });
     return true;
   }
 }

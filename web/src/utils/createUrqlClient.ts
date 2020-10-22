@@ -2,6 +2,7 @@ import { cacheExchange } from '@urql/exchange-graphcache';
 import { dedupExchange, Exchange, fetchExchange } from 'urql';
 import { betterUpdateQuery } from './betterUpdateQuery';
 import {
+  DeletePostMutationVariables,
   LoginMutation,
   LogoutMutation,
   MeDocument,
@@ -72,20 +73,20 @@ const errorExchange: Exchange = ({ forward }) => (ops$) => {
 };
 
 export const createUrlClient = (ssrExchange: any, ctx: any) => {
-  // let cookie = '';
-  // if (isServer()) {
-  //   cookie = ctx.req.headers.cookie;
-  // }
+  let cookie = '';
+  if (isServer()) {
+    cookie = ctx.req.headers.cookie;
+  }
 
   return {
     url: 'http://localhost:8000/graphql',
     fetchOptions: {
       credentials: 'include' as const,
-      // headers: cookie
-      //   ? {
-      //       cookie,
-      //     }
-      //   : undefined,
+      headers: cookie
+        ? {
+            cookie,
+          }
+        : undefined,
     },
     exchanges: [
       dedupExchange,
@@ -100,6 +101,9 @@ export const createUrlClient = (ssrExchange: any, ctx: any) => {
         },
         updates: {
           Mutation: {
+            deletePost: (_result, args, cache, info) => {
+              cache.invalidate({ __typename: 'Post', id: (args as DeletePostMutationVariables).id });
+            },
             vote: (_result, args, cache, info) => {
               const { postId, value } = args as VoteMutationVariables;
               const data = cache.readFragment(
