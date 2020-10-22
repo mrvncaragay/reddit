@@ -8,7 +8,7 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { ObjectType, Field } from 'type-graphql';
+import { ObjectType, Field, Int } from 'type-graphql';
 import { User } from './User';
 import { Updoot } from './Updoot';
 
@@ -37,6 +37,9 @@ export class Post extends BaseEntity {
   @Field()
   @Column({ type: 'integer', default: 0 })
   points!: number;
+
+  @Field(() => Int, { nullable: true })
+  voteStatus: number | null;
 
   @Field()
   @Column()
