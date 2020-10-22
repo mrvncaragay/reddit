@@ -6,7 +6,10 @@ query Posts($limit: Int!, $cursor: String) {
       createdAt
       updatedAt
       textSnippet
-      creatorId
+      creator {
+        id
+        username
+      }
     }
 
     hasMore
