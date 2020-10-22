@@ -108,10 +108,16 @@ export class PostResolver {
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit) + 1; // fetch num limit posts + 1, if more than it then it has more but less than it does not
 
-    const replacements: any[] = [realLimit, req.session.userId];
+    const replacements: any[] = [realLimit];
 
+    if (req.session.userId) {
+      replacements.push(req.session.userId);
+    }
+
+    let cursorIndex = '3';
     if (cursor) {
       replacements.push(new Date(cursor));
+      cursorIndex = '' + replacements.length;
     }
 
     const posts = await getConnection().query(
@@ -129,7 +135,7 @@ ${
 }
 from post p
 inner join public.user u on u.id = p."creatorId"
-${cursor ? `where p."createdAt" < $3` : ''}
+${cursor ? `where p."createdAt" < $${cursorIndex}` : ''}
 order by p."createdAt" DESC
 limit $1 
     `,
@@ -154,8 +160,8 @@ limit $1
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg('id') id: number): Promise<Post | undefined> {
-    return Post.findOne(id);
+  post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
+    return Post.findOne(id, { relations: ['creator'] });
   }
 
   @Mutation(() => Post)
