@@ -10,12 +10,16 @@ import { createUrlClient } from '../utils/createUrqlClient';
 
 const Index = () => {
   const [variables, setVariables] = useState({ limit: 10, cursor: null as string | null });
-  const [{ data, fetching }] = usePostsQuery({
+  const [{ data, error, fetching }] = usePostsQuery({
     variables,
   });
 
   if (!fetching && !data) {
-    return <div>No posts yet</div>;
+    return (
+      <div>
+        No posts yet<div>{error?.message}</div>
+      </div>
+    );
   }
 
   return (
