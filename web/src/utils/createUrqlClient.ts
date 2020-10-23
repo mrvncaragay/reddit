@@ -8,6 +8,7 @@ import {
   MeDocument,
   MeQuery,
   RegisterMutation,
+  UpdatePostMutationVariables,
   VoteMutationVariables,
 } from '../generated/graphql';
 import { pipe, tap } from 'wonka';
@@ -75,7 +76,7 @@ const errorExchange: Exchange = ({ forward }) => (ops$) => {
 export const createUrlClient = (ssrExchange: any, ctx: any) => {
   let cookie = '';
   if (isServer()) {
-    cookie = ctx.req.headers.cookie;
+    cookie = ctx?.req?.headers?.cookie;
   }
 
   return {
